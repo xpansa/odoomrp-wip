@@ -115,7 +115,7 @@ class OrderLineWizard(models.TransientModel):
 
     @api.multi
     def wizard_view(self):
-        view = self.env.ref('variable_attribute.purchase_order_line_variable_attribute_form')
+        view = self.env.ref('product_variant_order_multiple.purchase_order_line_variable_attribute_form')
 
         return {
             'name': _('Variable Attribute Order Line'),
