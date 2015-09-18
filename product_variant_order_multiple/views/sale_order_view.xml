@@ -7,7 +7,9 @@
             <field name="inherit_id" ref="sale_product_variants.sale_order_extended_form_view" />
             <field name="arch" type="xml">
                 <xpath expr="//notebook" position="before">
-                    <button name="open_wizard_variable_attribute" type="object" attrs="{'invisible': [('state', 'not in', ['draft'])]}" string="Wizard" class="oe_highlight"/>
+                    <button name="open_wizard_variable_attribute" type="object" 
+                        attrs="{'invisible': [('state', 'not in', ['draft'])]}" 
+                        string="Configure Product Variants" class="oe_highlight"/>
                 </xpath>
             </field>
         </record>
@@ -21,24 +23,46 @@
 
                         <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,done" statusbar_colors='{"exception":"red","cancel":"red"}'/>
                     </header>
+
                 <group>
                     <group>
+
+                        <field name="product_template" context="{'on_variable_wizard': True}"/>
+
+
+                        <field name="route_id"/>
+                        <label for="discount" groups="sale.group_discount_per_so_line"/>
+                        <div name="discount" groups="sale.group_discount_per_so_line">
+                            <field name="discount" class="oe_inline"/> %%
+                        </div>
+                        
+                    </group>
+                    <group>
+
+                        <field name="tax_id" widget="many2many_tags" domain="[('parent_id','=',False),('type_tax_use','&lt;&gt;','purchase')]"/>
+                        <field name="delay"/>
+                        <field name="th_weight"/>
+                        <field name="address_allotment_id"/>
+
+
+                    </group>
+                </group>
+
                         <field name="pricelist_id" invisible="1"/>
                         <field name="partner_id" invisible="1"/>
                         <field name="date_order" invisible="1"/>
                         <field name="fiscal_position" invisible="1"/>
                         <field name="order_id" invisible="1"/>
-                        
                         <field name="product_id" invisible="1"
                             context="{'partner_id':partner_id, 'quantity':product_uom_qty, 'pricelist':pricelist_id, 'uom':product_uom}"
                             groups="base.group_user"
-                            on_change="product_id_change(pricelist_id, product_id, product_uom_qty, False, product_uos_qty, False, name, partner_id, False, True, date_order, False, fiscal_position, False, context)"/>
+                            />
                         <label for="product_uom_qty" invisible="1"/>
                         <div>
                             <field invisible="1"
                                 context="{'partner_id':partner_id, 'quantity':product_uom_qty, 'pricelist':pricelist_id, 'uom':product_uom, 'uom_qty_change':True}"
                                 name="product_uom_qty" class="oe_inline"
-                                on_change="product_id_change(pricelist_id,product_id,product_uom_qty,product_uom,product_uos_qty,product_uos,name,partner_id, False, False, date_order, False, fiscal_position, True, context)"/>
+                                />
                             <field name="product_uom" groups="product.group_uom" class="oe_inline oe_no_button"
 
                                 on_change="product_uom_change(pricelist_id,product_id,product_uom_qty,product_uom,product_uos_qty,product_uos,name,partner_id, False, False, date_order, context)" invisible="1"/>
@@ -49,30 +73,15 @@
                             <field name="product_uos" options='{"no_open": True}' class="oe_inline" invisible="1"/>
                         </div>
                         <field name="price_unit" invisible="1"/>
-                        <label for="discount" groups="sale.group_discount_per_so_line" invisible="1"/>
-                        <div name="discount" groups="sale.group_discount_per_so_line">
-                            <field name="discount" class="oe_inline" invisible="1"/> %%
-                        </div>
 
-                    </group>
-                    <group>
-                        <field name="tax_id" widget="many2many_tags" domain="[('parent_id','=',False),('type_tax_use','&lt;&gt;','purchase')]" invisible="1"/>
-                        <field name="th_weight" invisible="1"/>
-                        <field name="address_allotment_id" invisible="1"/>
-                    </group>
-                    
-                </group>
-                <group>
-                    <field name="product_template" context="{'on_variable_wizard': True}"/>
-                </group>
-                
+
                 <label for="name" invisible="1"/>
                 <field name="name" invisible="1"/>
                 <div groups="base.group_no_one">
                     <label for="invoice_lines" invisible="1"/>
                     <field name="invoice_lines" invisible="1"/>
                 </div>
-                    <label for="product_attributes" />
+                    <label for="product_attributes" attrs="{'invisible': [('product_attributes','=',[])]}"/>
                     <field name="product_attributes"
                         attrs="{'invisible': [('product_attributes','=',[])]}"
                         options="{'no_create': True, 'no_delete': True}">

@@ -78,11 +78,12 @@ class OrderLineWizard(models.TransientModel):
     @api.multi
     @api.onchange('product_template')
     def onchange_product_template(self):
-        if not self.product_template.variable_attribute:
-            return {'type': 'ir.actions.act_window_close'}
         self.ensure_one()
         self.name = self.product_template.name
         
+        self.product_attributes = (
+            self.product_template._get_product_attributes_dict())
+
         if not self.product_template.attribute_line_ids:
             self.product_id = (
                 self.product_template.product_variant_ids and
@@ -99,17 +100,18 @@ class OrderLineWizard(models.TransientModel):
 
             if self.product_template.variable_attribute:
                 var_att = self.product_template.variable_attribute
-                att_values = var_att.value_ids
+                #att_values = var_att.value_ids
+                attribute_line_ids = self.product_template.attribute_line_ids
+                for atr in attribute_line_ids:
+                    if atr.attribute_id.id == var_att.id:
+                        att_values = atr.value_ids
+
                 var_att_qty_lines = [{'attribute': var_att.id, 'value': a.id, 'qty': 0} for a in att_values]
-            	#new_ids = []
-                #for line in var_att_qty_lines:
-                #	new_id = self.env['variable.attribute.quantity'].create(line)
-                #		new_ids.append(new_id.id)
+
                 self.variable_attribute_qty = (var_att_qty_lines)
 
         ajde_de = self.product_template._get_product_attributes_dict()
-        self.product_attributes = (
-            self.product_template._get_product_attributes_dict())
+
         return {'domain': {'product_id': [('product_tmpl_id', '=',
                                            self.product_template.id)]}}
 
@@ -142,8 +144,20 @@ class OrderLineWizard(models.TransientModel):
                 continue
             sequence += 1
 
-            product_attributes = [(0, 0, {'attribute': a.attribute.id, 'value': a.value.id, 'price_unit': 0}) for a in line.product_attributes]
-            product_attributes.append((0, 0, {'attribute': att_qty.attribute.id, 'value': att_qty.value.id, 'price_unit': 0}))
+            product_attributes = [(0, 0, {
+                'attribute': a.attribute.id, 
+                'value': a.value.id, 
+                'price_unit': 0
+                }) for a in line.product_attributes
+            ]
+            product_attributes.append((0, 0, {
+                'attribute': att_qty.attribute.id, 
+                'value': att_qty.value.id, 
+                'price_unit': 0
+            }))
+            name = "\n".join(line.product_attributes.mapped(
+                lambda x: "%s: %s" % (x.attribute.name, x.value.name)))
+            name = '%s\n%s: %s' % (name, att_qty.attribute.name, att_qty.value.name)
 
             res = {
                 'product_uos_qty': att_qty.qty,
@@ -153,7 +167,7 @@ class OrderLineWizard(models.TransientModel):
                 'product_uom_qty': att_qty.qty,
                 'product_uos': line.product_uos.id if line.product_uos else line.product_uom.id,
                 'company_id': line.company_id.id,
-                'name': line.name or ' ',
+                'name': name,
                 'delay': line.delay,
                 'state': 'draft',
                 'order_partner_id': line.order_partner_id.id if line.order_partner_id else False,
@@ -162,7 +176,7 @@ class OrderLineWizard(models.TransientModel):
                 #'product_id': line.product_id.id if line.product_id else False,
                 'salesman_id': line.salesman_id.id if line.salesman_id else False,
                 'th_weight': line.th_weight,
-                'tax_id': [( 6, 0, [t.id for t in line.tax_id])],
+                'tax_id': [(6, 0, [t.id for t in line.tax_id])], #   t.id for t in line.tax_id], # [( 6, 0, [t.id for t in line.tax_id])],
                 'product_template': line.product_template.id,
                 'product_attributes': product_attributes,
 	        }
