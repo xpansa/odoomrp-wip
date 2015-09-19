@@ -75,6 +75,10 @@ class OrderLineWizard(models.TransientModel):
     variable_attribute_qty = fields.One2many(comodel_name='variable.attribute.quantity', 
         inverse_name='line_id', copy=True, string='Variable Quantity')
 
+    tax_id = fields.Many2many(comodel_name='account.tax', relation='sale_line_wizard_tax_rel',
+        column1='sl_id', column2='tax_id', string='Taxes')
+
+
     @api.multi
     @api.onchange('product_template')
     def onchange_product_template(self):
@@ -138,6 +142,7 @@ class OrderLineWizard(models.TransientModel):
         # where qty is not zero
         values = []
         for att_qty in line.variable_attribute_qty:
+            
             res = {}
             product_attributes = [att_qty.value.id]
             if att_qty.qty == 0:
@@ -173,10 +178,9 @@ class OrderLineWizard(models.TransientModel):
                 'order_partner_id': line.order_partner_id.id if line.order_partner_id else False,
                 'order_id': line.order_id.id,
                 'discount': line.discount,
-                #'product_id': line.product_id.id if line.product_id else False,
                 'salesman_id': line.salesman_id.id if line.salesman_id else False,
                 'th_weight': line.th_weight,
-                #'tax_id': [(6, 0, [t.id for t in line.tax_id])], #   t.id for t in line.tax_id], # [( 6, 0, [t.id for t in line.tax_id])],
+                'tax_id': [(6, 0, [t.id for t in line.tax_id])],
                 'product_template': line.product_template.id,
                 'product_attributes': product_attributes,
 	        }
@@ -187,15 +191,14 @@ class OrderLineWizard(models.TransientModel):
     def generate_order_lines(self):
         n = 0
         order_line = self.env['sale.order.line']
+
         for rec in self:
-            
             values, n = self.prepare_values(rec, n)
             if not values:
                 continue
             
             for value in values:
                 new_line = order_line.create(value)
-                #new_line.tax_id = [(6, 0, [t.id for t in rec.tax_id])]
         if n == 0:
             raise exceptions.except_orm(
                 _('No Order Lines Generated!'),
