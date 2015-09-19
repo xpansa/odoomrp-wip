@@ -195,7 +195,7 @@ class OrderLineWizard(models.TransientModel):
             
             for value in values:
                 new_line = order_line.create(value)
-                new_line.tax_id = [(6, 0, [t.id for t in rec.tax_id])]
+                #new_line.tax_id = [(6, 0, [t.id for t in rec.tax_id])]
         if n == 0:
             raise exceptions.except_orm(
                 _('No Order Lines Generated!'),
