@@ -176,7 +176,7 @@ class OrderLineWizard(models.TransientModel):
                 #'product_id': line.product_id.id if line.product_id else False,
                 'salesman_id': line.salesman_id.id if line.salesman_id else False,
                 'th_weight': line.th_weight,
-                'tax_id': [(6, 0, [t.id for t in line.tax_id])], #   t.id for t in line.tax_id], # [( 6, 0, [t.id for t in line.tax_id])],
+                #'tax_id': [(6, 0, [t.id for t in line.tax_id])], #   t.id for t in line.tax_id], # [( 6, 0, [t.id for t in line.tax_id])],
                 'product_template': line.product_template.id,
                 'product_attributes': product_attributes,
 	        }
@@ -194,7 +194,8 @@ class OrderLineWizard(models.TransientModel):
                 continue
             
             for value in values:
-                order_line.create(value)
+                new_line = order_line.create(value)
+                new_line.tax_id = [(6, 0, [t.id for t in rec.tax_id])]
         if n == 0:
             raise exceptions.except_orm(
                 _('No Order Lines Generated!'),
