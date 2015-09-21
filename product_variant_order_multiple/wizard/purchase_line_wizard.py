@@ -75,41 +75,44 @@ class OrderLineWizard(models.TransientModel):
     variable_attribute_qty = fields.One2many(comodel_name='purchase.variable.attribute.quantity', 
         inverse_name='line_id', copy=True, string='Variable Quantity')
 
+    taxes_id = fields.Many2many(comodel_name='account.tax', relation='purchase_line_wizard_tax_rel',
+        column1='sl_id', column2='tax_id', string='Taxes')
+
     @api.multi
     @api.onchange('product_template')
     def onchange_product_template(self):
         self.ensure_one()
         self.name = self.product_template.name
-        self.variable_attribute_qty = ([])
-
+        
         if not self.product_template.attribute_line_ids:
             self.product_id = (
                 self.product_template.product_variant_ids and
                 self.product_template.product_variant_ids[0])
         else:
             self.product_id = False
-            '''
             self.price_unit = self.order_id.pricelist_id.with_context(
                 {
                     'uom': self.product_uom.id,
                     'date': self.order_id.date_order,
                 }).template_price_get(
-                self.product_template.id, self.product_uom_qty or 1.0,
+                self.product_template.id, self.product_qty or 1.0,
                 self.order_id.partner_id.id)[self.order_id.pricelist_id.id]
-            '''
+
             if self.product_template.variable_attribute:
                 var_att = self.product_template.variable_attribute
-                att_values = var_att.value_ids
-                var_att_qty_lines = [{'attribute': var_att.id, 'value': a.id, 'qty': 0} for a in att_values]
-            	#new_ids = []
-                #for line in var_att_qty_lines:
-                #	new_id = self.env['variable.attribute.quantity'].create(line)
-                #		new_ids.append(new_id.id)
-                self.variable_attribute_qty = (var_att_qty_lines)
+                att_values = None
 
-        ajde_de = self.product_template._get_product_attributes_dict()
+                attribute_line_ids = self.product_template.attribute_line_ids
+                for atr in attribute_line_ids:
+                    if atr.attribute_id.id == var_att.id:
+                        att_values = atr.value_ids
+                if att_values:
+                    var_att_qty_lines = [{'attribute': var_att.id, 'value': a.id, 'qty': 0} for a in att_values]
+                    self.variable_attribute_qty = (var_att_qty_lines)
+
         self.product_attributes = (
             self.product_template._get_product_attributes_dict())
+
         return {'domain': {'product_id': [('product_tmpl_id', '=',
                                            self.product_template.id)]}}
 
@@ -136,14 +139,27 @@ class OrderLineWizard(models.TransientModel):
         # where qty is not zero
         values = []
         for att_qty in line.variable_attribute_qty:
+            
             res = {}
             product_attributes = [att_qty.value.id]
             if att_qty.qty == 0:
                 continue
             sequence += 1
 
-            product_attributes = [(0, 0, {'attribute': a.attribute.id, 'value': a.value.id, 'price_unit': 0}) for a in line.product_attributes]
-            product_attributes.append((0, 0, {'attribute': att_qty.attribute.id, 'value': att_qty.value.id, 'price_unit': 0}))
+            product_attributes = [(0, 0, {
+                'attribute': a.attribute.id, 
+                'value': a.value.id, 
+                'price_unit': 0
+                }) for a in line.product_attributes
+            ]
+            product_attributes.append((0, 0, {
+                'attribute': att_qty.attribute.id, 
+                'value': att_qty.value.id, 
+                'price_unit': 0
+            }))
+            name = "\n".join(line.product_attributes.mapped(
+                lambda x: "%s: %s" % (x.attribute.name, x.value.name)))
+            name = '%s\n%s: %s' % (name, att_qty.attribute.name, att_qty.value.name)
 
             res = {
                 'product_qty': att_qty.qty,
@@ -151,7 +167,7 @@ class OrderLineWizard(models.TransientModel):
                 'price_unit': line.price_unit,
                 
                 'company_id': line.company_id.id,
-                'name': line.name or ' ',
+                'name': name,
                 'state': 'draft',
                 
                 'order_id': line.order_id.id,

@@ -8,7 +8,7 @@
             <field name="arch" type="xml">
                 <xpath expr="//notebook" position="before">
                     <button name="open_wizard_variable_attribute" type="object" 
-                        attrs="{'invisible': [('state', 'not in', ['draft'])]}" string="Wizard" class="oe_highlight"/>
+                        attrs="{'invisible': [('state', 'not in', ['draft'])]}" string="Configure Product Variants" class="oe_highlight"/>
                 </xpath>
             </field>
         </record>
@@ -22,33 +22,30 @@
                     <header groups="base.group_user">
                         <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,done" statusbar_colors='{"exception":"red","cancel":"red"}'/>
                     </header>
-                <group>
                     <group>
-                        <field name="partner_id" invisible="1"/>
-                        <field name="date_order" invisible="1"/>
-                        <field name="order_id" invisible="1"/>
-                        
-                        <field name="product_id"
-                        context="{'partner_id':parent.partner_id, 'quantity':product_uom_qty, 'pricelist':parent.pricelist_id, 'uom':product_uom}"
-                                                groups="base.group_user"
-                                                on_change="product_id_change(parent.pricelist_id, product_id, product_uom_qty, False, product_uos_qty, False, name, parent.partner_id, False, True, parent.date_order, False, parent.fiscal_position, False, context)" invisible="1"/>
-                        <label for="product_qty" invisible="1"/>
-                        <div>
-                            <field name="product_qty" invisible="1" class="oe_inline"/>
-                             <field name="product_uom" invisible="1" groups="product.group_uom" class="oe_inline oe_no_button"/> 
-                        </div>
-                        <field name="price_unit" invisible="1"/>
+                        <group>
+                            <field name="product_template" context="{'on_variable_wizard': True}"/>
+                        </group>
+                        <group>
+                            <field name="taxes_id" widget="many2many_tags" 
+                                domain="[('parent_id','=',False),('type_tax_use','&lt;&gt;','purchase')]"/>
+                            <field name="date_planned"/>
+                        </group>
                     </group>
-                    <group>
-                        <field name="taxes_id" invisible="1" widget="many2many_tags" domain="[('parent_id','=',False),('type_tax_use','&lt;&gt;','purchase')]"/>
-                    </group>
-                </group>
-                <group>
-                    <field name="product_template" context="{'on_variable_wizard': True}"/>
-                </group>
-                <label for="name" invisible="1"/>
-                <field name="name" invisible="1"/>
-                    <label for="product_attributes" />
+
+                    <field name="partner_id" invisible="1"/>
+                    <field name="date_order" invisible="1"/>
+                    <field name="order_id" invisible="1"/>
+                    <label for="name" invisible="1"/>
+                    <field name="name" invisible="1"/>
+                    <field name="product_id" invisible="1"/>
+                    <label for="product_qty" invisible="1"/>
+                    <div>
+                        <field name="product_qty" invisible="1" class="oe_inline"/>
+                         <field name="product_uom" invisible="1" groups="product.group_uom" class="oe_inline oe_no_button"/> 
+                    </div>
+                    <field name="price_unit" invisible="1"/>
+                    <label for="product_attributes" attrs="{'invisible': [('product_attributes','=',[])]}"/>
                     <field name="product_attributes"
                         attrs="{'invisible': [('product_attributes','=',[])]}"
                         options="{'no_create': True, 'no_delete': True}">

@@ -85,9 +85,6 @@ class OrderLineWizard(models.TransientModel):
         self.ensure_one()
         self.name = self.product_template.name
         
-        self.product_attributes = (
-            self.product_template._get_product_attributes_dict())
-
         if not self.product_template.attribute_line_ids:
             self.product_id = (
                 self.product_template.product_variant_ids and
@@ -104,17 +101,18 @@ class OrderLineWizard(models.TransientModel):
 
             if self.product_template.variable_attribute:
                 var_att = self.product_template.variable_attribute
-                #att_values = var_att.value_ids
+                att_values = None
+
                 attribute_line_ids = self.product_template.attribute_line_ids
                 for atr in attribute_line_ids:
                     if atr.attribute_id.id == var_att.id:
                         att_values = atr.value_ids
+                if att_values:
+                    var_att_qty_lines = [{'attribute': var_att.id, 'value': a.id, 'qty': 0} for a in att_values]
+                    self.variable_attribute_qty = (var_att_qty_lines)
 
-                var_att_qty_lines = [{'attribute': var_att.id, 'value': a.id, 'qty': 0} for a in att_values]
-
-                self.variable_attribute_qty = (var_att_qty_lines)
-
-        ajde_de = self.product_template._get_product_attributes_dict()
+        self.product_attributes = (
+            self.product_template._get_product_attributes_dict())
 
         return {'domain': {'product_id': [('product_tmpl_id', '=',
                                            self.product_template.id)]}}
