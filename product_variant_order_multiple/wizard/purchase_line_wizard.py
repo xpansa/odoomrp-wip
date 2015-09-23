@@ -1,5 +1,7 @@
 # -*- encoding: utf-8 -*-
 
+import collections
+
 from openerp import models, fields, exceptions, api, _
 from openerp.addons import decimal_precision as dp
 
@@ -133,6 +135,32 @@ class OrderLineWizard(models.TransientModel):
             'context': self.env.context,
         }
 
+    def generate_name(self, line, att_qty):
+        # helper function that return a name(description) for the order line
+        # based on line itself
+        # current variable_attribute_qty in generating iteration
+
+        attributes = dict()
+        for at in line.product_attributes:
+            attributes.update({at.attribute.id: {
+                'attr_name': at.attribute.name,
+                'attr_value_name': at.value.name
+            }})
+
+        attributes.update({att_qty.attribute.id: {
+                'attr_name': att_qty.attribute.name,
+                'attr_value_name': att_qty.value.name
+        }})               
+                
+        name = line.product_template.name
+
+        ordered_attrs = collections.OrderedDict(sorted(attributes.items()))
+
+        for k, v in ordered_attrs.iteritems():
+            name += _(' ; %s: %s') % (v['attr_name'], v['attr_value_name'])
+
+        return name
+
     def prepare_values(self, line, sequence):
         # read values from variable.attribute.quantity
         # construct new sale order line for each of variable.attribute.quantity lines
@@ -141,9 +169,12 @@ class OrderLineWizard(models.TransientModel):
         for att_qty in line.variable_attribute_qty:
             
             res = {}
+
             product_attributes = [att_qty.value.id]
+
             if att_qty.qty == 0:
                 continue
+
             sequence += 1
 
             product_attributes = [(0, 0, {
@@ -152,14 +183,14 @@ class OrderLineWizard(models.TransientModel):
                 'price_unit': 0
                 }) for a in line.product_attributes
             ]
+
             product_attributes.append((0, 0, {
                 'attribute': att_qty.attribute.id, 
                 'value': att_qty.value.id, 
                 'price_unit': 0
             }))
-            name = "\n".join(line.product_attributes.mapped(
-                lambda x: "%s: %s" % (x.attribute.name, x.value.name)))
-            name = '%s\n%s: %s' % (name, att_qty.attribute.name, att_qty.value.name)
+
+            name = self.generate_name(line, att_qty)
 
             res = {
                 'product_qty': att_qty.qty,
@@ -176,7 +207,9 @@ class OrderLineWizard(models.TransientModel):
                 'product_attributes': product_attributes,
                 'date_planned': line.date_planned,
 	        }
+
             values.append(res)
+
         return values, sequence
 
     @api.multi
