@@ -25,11 +25,16 @@
               "Serv. Tecnol. Avanzados - Pedro M. Baeza",
     "website": "http://www.odoomrp.com",
     "category": "Manufacturing",
-    "depends": ['mrp',
+    "depends": ['sale',
+                'mrp',
                 'procurement_plan',
+                'stock_reserve',
+                'sale_mrp_project_link'
                 ],
     "data": ['views/mrp_production_view.xml',
              'views/procurement_plan_view.xml',
+             'views/procurement_order_view.xml',
+             'views/stock_reservation_view.xml',
              ],
     "installable": True
 }

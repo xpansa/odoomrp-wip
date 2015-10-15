@@ -4,3 +4,5 @@
 ##############################################################################
 from . import procurement
 from . import mrp_production
+from . import stock_reservation
+from . import sale_order
