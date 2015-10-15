@@ -35,7 +35,7 @@
         'account',
         'sale',
         'sale_product_variants',
-        'product_variant_order_multiple'
+        'base_product_variant_order_multiple'
     ],
     'data': [
         'views/sale_order_view.xml',
