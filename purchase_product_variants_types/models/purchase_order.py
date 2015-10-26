@@ -1,17 +1,17 @@
-# -*- encoding: utf-8 -*-
-##############################################################################
-# For copyright and license notices, see __openerp__.py file in root directory
-##############################################################################
+# -*- coding: utf-8 -*-
+# (c) 2015 Serv. Tecnol. Avanzados - Pedro M. Baeza
+# License AGPL-3 - See http://www.gnu.org/licenses/agpl-3.0.html
 
-from openerp import models, fields, api, exceptions, _
+from openerp import models, fields, api, _
+from openerp.exceptions import Warning as UserError
 
 
-class SaleOrderLineAttribute(models.Model):
-    _inherit = 'sale.order.line.attribute'
+class PurchaseOrderLineAttribute(models.Model):
+    _inherit = 'purchase.order.line.attribute'
 
     custom_value = fields.Float(string='Custom value')
-    attr_type = fields.Selection(string='Type', store=False,
-                                 related='attribute.attr_type')
+    attr_type = fields.Selection(
+        string='Type', store=False, related='attribute.attr_type')
 
     def _is_custom_value_in_range(self):
         if self.attr_type == 'range':
@@ -23,7 +23,7 @@ class SaleOrderLineAttribute(models.Model):
     @api.constrains('custom_value', 'attr_type', 'value')
     def _custom_value_in_range(self):
         if not self._is_custom_value_in_range():
-            raise exceptions.Warning(
+            raise UserError(
                 _("Custom value for attribute '%s' must be between %s and"
                   " %s.")
                 % (self.attribute.name, self.value.min_range,
@@ -35,8 +35,8 @@ class SaleOrderLineAttribute(models.Model):
         self._custom_value_in_range()
 
 
-class SaleOrderLine(models.Model):
-    _inherit = 'sale.order.line'
+class PurchaseOrderLine(models.Model):
+    _inherit = 'purchase.order.line'
 
     @api.one
     def _check_line_confirmability(self):
@@ -46,7 +46,7 @@ class SaleOrderLine(models.Model):
             attribute_line = self.product_template.attribute_line_ids.filtered(
                 lambda x: x.attribute_id == line.attribute)
             if attribute_line.required:
-                raise exceptions.Warning(
+                raise UserError(
                     _("You cannot confirm before configuring all values "
                       "of required attributes. Product: %s Attribute: %s.") %
                     (self.product_template.name, attribute_line.display_name))
