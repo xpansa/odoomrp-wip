@@ -18,6 +18,7 @@ class SaleOrder(models.Model):
         })
 
         order_obj = self.pool['sale.order'].browse(cr, uid, len(order) and order[0] or [], context=context)
+        
         new_wizard_id = self.pool['sale.order.line.wizard'].create(cr, uid, {
         	'order_id': len(order) and order[0] or False,
             'name': ' ',
@@ -26,6 +27,7 @@ class SaleOrder(models.Model):
             'date_order': order_obj.date_order if order_obj else False,
             'pricelist_id': order_obj.pricelist_id.id if order_obj else False,
             'fiscal_position': order_obj.fiscal_position.id if order_obj else False,
+            'delay': 0,
         })
 
         return self.pool['sale.order.line.wizard'].wizard_view(cr, uid, new_wizard_id, context)
